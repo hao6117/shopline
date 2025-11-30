@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>南九州五日遊助手</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #e67e22;
+            --bg: #f4f7f6;
+            --card: #ffffff;
+            --text: #333;
+            --danger: #e74c3c;
+            --success: #27ae60;
+        }
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 80px; -webkit-tap-highlight-color: transparent; }
+        
+        /* Header */
+        header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        h1 { margin: 0; font-size: 1.2rem; letter-spacing: 1px; }
+        
+        /* Navigation */
+        nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+        nav button { background: none; border: none; font-size: 0.8rem; color: #95a5a6; cursor: pointer; display: flex; flex-direction: column; align-items: center; transition: color 0.2s; }
+        nav button.active { color: var(--secondary); font-weight: bold; }
+        nav button span { font-size: 1.4rem; margin-bottom: 4px; }
+
+        /* Sections */
+        .section { display: none; padding: 20px 15px; max-width: 600px; margin: 0 auto; animation: fadeIn 0.3s ease; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Itinerary Cards */
+        .day-card { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.03); }
+        .day-header { font-weight: 800; color: var(--primary); margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+        .day-header span { font-size: 0.9em; color: var(--secondary); background: rgba(230, 126, 34, 0.1); padding: 4px 8px; border-radius: 20px; }
+        
+        .spot { display: flex; align-items: center; margin: 12px 0; padding: 12px; background: #fff; border: 1px solid #eee; border-radius: 8px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+        .spot:active { background: #f5f5f5; transform: scale(0.98); }
+        .spot::after { content: '➔'; position: absolute; right: 15px; color: #ddd; font-size: 1.2em; }
+        .spot-icon { margin-right: 15px; font-size: 1.4rem; width: 30px; text-align: center; }
+        .spot-info { flex: 1; }
+        .spot-name { font-weight: 600; font-size: 1rem; color: #444; }
+        .hotel { margin-top: 15px; padding: 12px; background: #e8f6f3; border-radius: 8px; color: #16a085; font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; gap: 8px; border: 1px solid #d1f2eb; cursor: pointer; }
+
+        /* Expense Tracker */
+        .total-banner { background: linear-gradient(135deg, #2c3e50, #34495e); color: white; padding: 20px; border-radius: 15px; margin-bottom: 25px; text-align: center; box-shadow: 0 4px 15px rgba(44, 62, 80, 0.3); }
+        .total-price { font-size: 2.2rem; font-weight: bold; margin: 10px 0; }
+        
+        .tool-card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .tool-card h3 { margin-top: 0; color: var(--primary); font-size: 1.1rem; }
+
+        .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        input, select { padding: 12px; border: 1px solid #ddd; border-radius: 8px; flex: 1; font-size: 1rem; -webkit-appearance: none; transition: border 0.2s; }
+        input:focus { outline: none; border-color: var(--secondary); }
+        
+        button.btn-add { background: var(--secondary); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 1rem; width: 100%; cursor: pointer; box-shadow: 0 2px 5px rgba(230, 126, 34, 0.3); transition: background 0.2s; }
+        button.btn-add:active { transform: translateY(1px); box-shadow: none; }
+        
+        .expense-list { margin-top: 10px; }
+        .expense-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f0f0f0; animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        
+        .expense-meta { display: flex; flex-direction: column; gap: 4px; }
+        .expense-desc { font-weight: 600; font-size: 1.05rem; }
+        .expense-twd { font-size: 0.85rem; color: #7f8c8d; background: #eee; padding: 2px 6px; border-radius: 4px; display: inline-block; width: fit-content; }
+        .expense-actions { display: flex; align-items: center; gap: 15px; }
+        .expense-jpy { font-weight: bold; color: var(--primary); font-size: 1.1rem; }
+        .delete-btn { color: #e74c3c; cursor: pointer; padding: 5px; font-size: 1.2rem; opacity: 0.7; }
+        .delete-btn:hover { opacity: 1; }
+
+        .empty-state { text-align: center; color: #bdc3c7; margin: 40px 0; }
+        .empty-state div { font-size: 3rem; margin-bottom: 10px; }
+
+        /* Tools */
+        .weather-btn { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 15px; margin: 8px 0; background: #3498db; color: white; text-decoration: none; border-radius: 8px; font-weight: 500; transition: background 0.2s; }
+        .weather-btn:active { background: #2980b9; }
+        .rate-calc label { font-size: 0.9rem; color: #7f8c8d; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🇯🇵 南九州五日遊助手</h1>
+</header>
+
+<!-- 行程頁面 -->
+<div id="itinerary" class="section active">
+    <div class="day-card">
+        <div class="day-header">Day 1 <span>鹿兒島</span></div>
+        <div onclick="openMap('桃園國際機場')" class="spot"><span class="spot-icon">✈️</span><div class="spot-info"><div class="spot-name">桃園國際機場</div></div></div>
+        <div onclick="openMap('鹿兒島空港')" class="spot"><span class="spot-icon">🛬</span><div class="spot-info"><div class="spot-name">鹿兒島空港</div></div></div>
+        <div onclick="openMap('鹿兒島燒酒和啤酒主題樂園')" class="spot"><span class="spot-icon">🍺</span><div class="spot-info"><div class="spot-name">鹿兒島燒酒和啤酒主題樂園</div></div></div>
+        <div onclick="openMap('知覽武家屋敷庭園')" class="spot"><span class="spot-icon">🏯</span><div class="spot-info"><div class="spot-name">知覽武家屋敷</div></div></div>
+        <div onclick="openMap('天文館商店街')" class="spot"><span class="spot-icon">🛍️</span><div class="spot-info"><div class="spot-name">天文館商店街</div></div></div>
+        <div onclick="openMap('SHIROYAMA HOTEL kagoshima')" class="hotel">🏨 住宿：城山觀光飯店</div>
+    </div>
+
+    <div class="day-card">
+        <div class="day-header">Day 2 <span>櫻島/霧島</span></div>
+        <div onclick="openMap('城山公園展望台')" class="spot"><span class="spot-icon">👀</span><div class="spot-info"><div class="spot-name">城山公園展望台</div></div></div>
+        <div onclick="openMap('仙巖園')" class="spot"><span class="spot-icon">🌸</span><div class="spot-info"><div class="spot-name">仙巖園</div></div></div>
+        <div onclick="openMap('鹿兒島港')" class="spot"><span class="spot-icon">🚢</span><div class="spot-info"><div class="spot-name">櫻島渡輪 (往櫻島港)</div></div></div>
+        <div onclick="openMap('有村熔岩展望所')" class="spot"><span class="spot-icon">🌋</span><div class="spot-info"><div class="spot-name">有村熔岩展望所</div></div></div>
+        <div onclick="openMap('霧島神宮')" class="spot"><span class="spot-icon">⛩️</span><div class="spot-info"><div class="spot-name">霧島神宮</div></div></div>
+        <div onclick="openMap('Kirishima Kokusai Hotel')" class="hotel">🏨 住宿：霧島国際飯店</div>
+    </div>
+
+    <div class="day-card">
+        <div class="day-header">Day 3 <span>宮崎日南</span></div>
+        <div onclick="openMap('關之尾瀑布')" class="spot"><span class="spot-icon">🌊</span><div class="spot-info"><div class="spot-name">關之尾瀑布</div></div></div>
+        <div onclick="openMap('AEON Mall Miyazaki')" class="spot"><span class="spot-icon">🛒</span><div class="spot-info"><div class="spot-name">AEON 夢樂城宮崎</div></div></div>
+        <div onclick="openMap('Sun Messe Nichinan')" class="spot"><span class="spot-icon">🗿</span><div class="spot-info"><div class="spot-name">日南太陽花園 (摩艾)</div></div></div>
+        <div onclick="openMap('Udo Shrine')" class="spot"><span class="spot-icon">🐇</span><div class="spot-info"><div class="spot-name">鵜戶神宮</div></div></div>
+        <div onclick="openMap('Miyazaki Kanko Hotel')" class="hotel">🏨 住宿：宮崎觀光飯店</div>
+    </div>
+
+    <div class="day-card">
+        <div class="day-header">Day 4 <span>高千穗</span></div>
+        <div onclick="openMap('Obi Castle')" class="spot"><span class="spot-icon">🏯</span><div class="spot-info"><div class="spot-name">飫肥城跡</div></div></div>
+        <div onclick="openMap('Amaterasu Railway')" class="spot"><span class="spot-icon">🚂</span><div class="spot-info"><div class="spot-name">高千穗天照鐵道</div></div></div>
+        <div onclick="openMap('Takachiho Gorge')" class="spot"><span class="spot-icon">🚣</span><div class="spot-info"><div class="spot-name">高千穗峽/真名井瀑布</div></div></div>
+        <div onclick="openMap('Takachiho Shrine')" class="spot"><span class="spot-icon">🌲</span><div class="spot-info"><div class="spot-name">高千穗神社</div></div></div>
+        <div onclick="openMap('ANA Crowne Plaza Kumamoto New Sky')" class="hotel">🏨 住宿：ANA 熊本新天空</div>
+    </div>
+
+    <div class="day-card">
+        <div class="day-header">Day 5 <span>熊本/返程</span></div>
+        <div onclick="openMap('Kumamoto Castle')" class="spot"><span class="spot-icon">🏯</span><div class="spot-info"><div class="spot-name">熊本城</div></div></div>
+        <div onclick="openMap('SAKURA MACHI Kumamoto')" class="spot"><span class="spot-icon">🛍️</span><div class="spot-info"><div class="spot-name">櫻町購物中心</div></div></div>
+        <div onclick="openMap('Suizenji Jojuen Garden')" class="spot"><span class="spot-icon">🍵</span><div class="spot-info"><div class="spot-name">水前寺成趣園</div></div></div>
+        <div onclick="openMap('Aso Kumamoto Airport')" class="spot"><span class="spot-icon">🛫</span><div class="spot-info"><div class="spot-name">熊本空港 -> 桃園</div></div></div>
+    </div>
+</div>
+
+<!-- 記帳頁面 -->
+<div id="expenses" class="section">
+    <div class="total-banner">
+        <div style="opacity:0.9; margin-bottom:5px;">總支出 (約合台幣)</div>
+        <div class="total-price" id="totalTWD">NT$ 0</div>
+        <div style="font-size:0.9rem; opacity:0.8; background:rgba(255,255,255,0.2); padding:2px 10px; border-radius:10px; display:inline-block;">
+            總日幣: <span id="totalJPY">¥0</span>
+        </div>
+    </div>
+
+    <div class="tool-card">
+        <h3>✏️ 新增消費</h3>
+        <div class="input-group">
+            <input type="text" id="descInput" placeholder="項目 (如: 拉麵)">
+            <input type="number" id="amtInput" inputmode="decimal" placeholder="日幣金額" onkeypress="handleKeyPress(event)">
+        </div>
+        <button class="btn-add" onclick="addExpense()">+ 記一筆</button>
+    </div>
+
+    <div id="expenseList" class="expense-list">
+        <!-- JS renders items here -->
+    </div>
+
+    <div style="text-align:center; margin-top:30px; margin-bottom: 20px;">
+        <button onclick="clearExpenses()" style="color:#999; background:none; border:1px solid #ddd; padding:8px 15px; border-radius:20px; font-size:0.85rem;">🗑️ 清空所有紀錄</button>
+    </div>
+</div>
+
+<!-- 工具頁面 -->
+<div id="tools" class="section">
+    <div class="tool-card">
+        <h3>🌤️ 及時天氣預報</h3>
+        <a href="https://tenki.jp/forecast/9/46/8810/" target="_blank" class="weather-btn">
+            <span>鹿兒島 Kagoshima</span> <span>➔</span>
+        </a>
+        <a href="https://tenki.jp/forecast/9/45/8710/" target="_blank" class="weather-btn">
+            <span>宮崎 Miyazaki</span> <span>➔</span>
+        </a>
+        <a href="https://tenki.jp/forecast/9/43/8610/" target="_blank" class="weather-btn">
+            <span>熊本 Kumamoto</span> <span>➔</span>
+        </a>
+    </div>
+
+    <div class="tool-card">
+        <h3>💰 匯率設定 (JPY → TWD)</h3>
+        <p style="font-size:0.85rem; color:#666; margin-bottom:15px;">設定匯率後會自動儲存，記帳總額也會隨之更新。</p>
+        <div class="rate-calc">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                <label>目前匯率:</label>
+                <input type="number" id="rate" step="0.001" inputmode="decimal" style="width:100px; font-weight:bold; color:var(--secondary);" onchange="updateRate()" onkeyup="updateRate()">
+            </div>
+            <div style="height:1px; background:#eee; margin:15px 0;"></div>
+            <label>快速試算:</label>
+            <div class="input-group">
+                <input type="number" id="calcJpy" placeholder="輸入日幣" inputmode="decimal" oninput="convertCurrency()">
+                <div style="display:flex; align-items:center; font-weight:bold; min-width: 100px;">
+                    = NT$ <span id="calcTwd" style="margin-left:5px; color:var(--secondary);">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<nav>
+    <button onclick="switchTab('itinerary', this)" class="active"><span>📅</span>行程</button>
+    <button onclick="switchTab('expenses', this)"><span>💸</span>記帳</button>
+    <button onclick="switchTab('tools', this)"><span>🧰</span>工具</button>
+</nav>
+
+<script>
+    // --- 1. Navigation Logic ---
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+        btn.classList.add('active');
+        window.scrollTo(0,0);
+    }
+
+    // --- 2. Map Logic ---
+    function openMap(locationName) {
+        // 使用更精確的搜尋字串，避免跳轉錯誤
+        const query = encodeURIComponent(locationName);
+        window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
+    }
+
+    // --- 3. Expense Logic ---
+    // 從 localStorage 讀取匯率，若無則預設 0.215
+    let currentRate = parseFloat(localStorage.getItem('tripRate')) || 0.215;
+    let expenses = JSON.parse(localStorage.getItem('tripExpenses')) || [];
+
+    // [Fix] 定義格式化工具 (將這些移到初始化邏輯之前)
+    const formatJPY = (num) => new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY', maximumFractionDigits: 0 }).format(num);
+    const formatTWD = (num) => new Intl.NumberFormat('zh-TW', { style: 'currency', currency: 'TWD', maximumFractionDigits: 0 }).format(num);
+
+    // 初始化
+    document.getElementById('rate').value = currentRate;
+    renderExpenses();
+
+    function renderExpenses() {
+        const list = document.getElementById('expenseList');
+        const totalTwdEl = document.getElementById('totalTWD');
+        const totalJpyEl = document.getElementById('totalJPY');
+        
+        list.innerHTML = '';
+        
+        if (expenses.length === 0) {
+            list.innerHTML = `
+                <div class="empty-state">
+                    <div>🍃</div>
+                    <p>目前沒有記帳資料</p>
+                </div>
+            `;
+            totalJpyEl.innerText = formatJPY(0);
+            totalTwdEl.innerText = formatTWD(0);
+            return;
+        }
+
+        let totalJpy = 0;
+
+        // 複製一份陣列並反轉，讓最新的顯示在上面
+        expenses.slice().reverse().forEach((item) => {
+            const amount = parseFloat(item.amount);
+            totalJpy += amount;
+            const twdVal = Math.round(amount * currentRate);
+            
+            const div = document.createElement('div');
+            div.className = 'expense-item';
+            div.innerHTML = `
+                <div class="expense-meta">
+                    <div class="expense-desc">${item.desc}</div>
+                    <div class="expense-twd">約 ${formatTWD(twdVal)}</div>
+                </div>
+                <div class="expense-actions">
+                    <span class="expense-jpy">${formatJPY(amount)}</span>
+                    <span class="delete-btn" onclick="deleteExpense(${item.id})">×</span>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+
+        totalJpyEl.innerText = formatJPY(totalJpy);
+        totalTwdEl.innerText = formatTWD(Math.round(totalJpy * currentRate));
+    }
+
+    function addExpense() {
+        const descInput = document.getElementById('descInput');
+        const amtInput = document.getElementById('amtInput');
+        
+        const desc = descInput.value.trim();
+        const amt = parseFloat(amtInput.value);
+        
+        if(desc && !isNaN(amt) && amt > 0) {
+            // 使用 Date.now() 產生唯一 ID，避免刪除時錯誤
+            const newItem = {
+                id: Date.now(),
+                desc: desc,
+                amount: amt
+            };
+            expenses.push(newItem);
+            saveData();
+            
+            // 清空輸入並聚焦回第一個欄位，方便連續輸入
+            descInput.value = '';
+            amtInput.value = '';
+            descInput.focus(); 
+            renderExpenses();
+        } else {
+            // 簡單的搖晃動畫或提示
+            alert('請輸入有效的項目名稱和金額');
+        }
+    }
+
+    // 支援按 Enter 鍵送出
+    function handleKeyPress(e) {
+        if(e.key === 'Enter') addExpense();
+    }
+
+    // 透過 ID 刪除，比 Index 更安全
+    function deleteExpense(id) {
+        if(confirm('確定刪除這筆紀錄嗎？')) {
+            expenses = expenses.filter(item => item.id !== id);
+            saveData();
+            renderExpenses();
+        }
+    }
+
+    function clearExpenses() {
+        if(expenses.length === 0) return;
+        if(confirm('確定清空所有記帳資料？此動作無法復原。')) {
+            expenses = [];
+            saveData();
+            renderExpenses();
+        }
+    }
+
+    function saveData() {
+        localStorage.setItem('tripExpenses', JSON.stringify(expenses));
+    }
+
+    // --- 4. Tool Logic ---
+    function updateRate() {
+        const rateInput = document.getElementById('rate').value;
+        const newRate = parseFloat(rateInput);
+        if(!isNaN(newRate) && newRate > 0) {
+            currentRate = newRate;
+            localStorage.setItem('tripRate', currentRate); // 儲存匯率設定
+            renderExpenses(); // 重新計算總額
+            convertCurrency(); // 若下方試算有數值，也一起更新
+        }
+    }
+
+    function convertCurrency() {
+        const jpy = parseFloat(document.getElementById('calcJpy').value);
+        
+        if(!isNaN(jpy)) {
+            document.getElementById('calcTwd').innerText = Math.round(jpy * currentRate).toLocaleString();
+        } else {
+            document.getElementById('calcTwd').innerText = '0';
+        }
+    }
+</script>
+
+</body>
+</html>
