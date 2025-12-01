@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>南九州五日遊助手</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #e67e22;
+            --bg: #f4f7f6;
+            --card: #ffffff;
+            --text: #333;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 70px; }
+        
+        /* Header */
+        header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1 { margin: 0; font-size: 1.2rem; }
+        
+        /* Navigation */
+        nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100; }
+        nav button { background: none; border: none; font-size: 0.9rem; color: #7f8c8d; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
+        nav button.active { color: var(--secondary); font-weight: bold; }
+        nav button span { font-size: 1.2rem; margin-bottom: 2px; }
+
+        /* Sections */
+        .section { display: none; padding: 15px; max-width: 600px; margin: 0 auto; }
+        .section.active { display: block; }
+
+        /* Itinerary Cards */
+        .day-card { background: var(--card); border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .day-header { font-weight: bold; color: var(--secondary); margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; display: flex; justify-content: space-between; }
+        .spot { display: flex; align-items: center; margin: 10px 0; padding: 8px; background: #f9f9f9; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+        .spot:active { background: #eee; }
+        .spot-icon { margin-right: 10px; font-size: 1.2rem; }
+        .spot-info { flex: 1; }
+        .spot-name { font-weight: 500; font-size: 1rem; }
+        .hotel { margin-top: 10px; padding: 10px; background: #e8f6f3; border-radius: 6px; color: #16a085; font-size: 0.9rem; }
+        
+        /* Expense Tracker */
+        .input-group { display: flex; gap: 10px; margin-bottom: 10px; }
+        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 5px; flex: 1; font-size: 1rem; }
+        button.btn-add { background: var(--secondary); color: white; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; width: 100%; cursor: pointer; }
+        .expense-list { margin-top: 20px; }
+        .expense-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; background: white; }
+        .total-banner { background: var(--primary); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
+        
+        /* Tools */
+        .tool-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .weather-btn { display: block; width: 100%; padding: 12px; margin: 5px 0; background: #3498db; color: white; text-align: center; text-decoration: none; border-radius: 5px; }
+        .rate-calc { display: flex; flex-direction: column; gap: 10px; }
+        
+        /* Utilities */
+        .delete-btn { color: red; margin-left: 10px; cursor: pointer; }
+        .badge { font-size: 0.8em; background: #eee; padding: 2px 6px; border-radius: 4px; color: #666; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>南九州五日遊助手</h1>
+</header>
+
+<div id="itinerary" class="section active">
+    <div class="day-card">
+        <div class="day-header">Day 1 <span>鹿兒島</span></div>
+        <div onclick="openMap('桃園國際機場')" class="spot"><span class="spot-icon">✈️</span><div class="spot-info"><div class="spot-name">桃園國際機場</div></div></div>
+        <div onclick="openMap('鹿兒島空港')" class="spot"><span class="spot-icon">🛬</span><div class="spot-info"><div class="spot-name">鹿兒島空港</div></div></div>
+        <div onclick="openMap('鹿兒島燒酒和啤酒主題樂園')" class="spot"><span class="spot-icon">🍺</span><div class="spot-info"><div class="spot-name">鹿兒島燒酒和啤酒主題樂園</div></div></div>
+        <div onclick="openMap('praha-genv知覽武家屋敷')" class="spot"><span class="spot-icon">🏯</span><div class="spot-info"><div class="spot-name">知覽武家屋敷</div></div></div>
+        <div onclick="openMap('天文館商店街')" class="spot"><span class="spot-icon">🛍️</span><div class="spot-info"><div class="spot-name">天文館商店街</div></div></div>
+        <div onclick="openMap('城山ホテル鹿児島')" class="hotel">🏨 住宿：城山ホテル鹿児島</div>
+    </div>
+
+    <div class="day-card">
+        <div class="day-header">Day 2 <span>櫻島/霧島</span></div>
+        <div onclick="openMap('城山公園展望台')" class="spot"><span class="spot-icon">👀</span><div class="spot-info"><div class="spot-name">城山公園展望台</div></div></div>
+        <div onclick="openMap('仙巖園')" class="spot"><span class="spot-icon">🌸</span><div class="spot-info"><div class="spot-name">仙巖園</div></div></div>
+        <div onclick="openMap('鹿兒島港')" class="spot"><span class="spot-icon">🚢</span><div class="spot-info"><div class="spot-name">櫻島渡輪 (鹿兒島港~櫻島港)</div></div></div>
+        <div onclick="openMap('有村熔岩展望所')" class="spot"><span class="spot-icon">🌋</span><div class="spot-info"><div class="spot-name">有村熔岩展望所</div></div></div>
+        <div onclick="openMap('霧島神宮')" class="spot"><span class="spot-icon">⛩️</span><div class="spot-info"><div class="spot-name">霧島神宮</div></div></div>
+        <div onclick="openMap('霧島国際ホテル')" class="hotel">🏨 住宿：霧島国際ホテル</div>
+    </div>
+
+    <div class="day-card">
+        <div class="day-header">Day 3 <span>宮崎日南</span></div>
+        <div onclick="openMap('關之尾瀑布')" class="spot"><span class="spot-icon">🌊</span><div class="spot-info"><div class="spot-name">關之尾瀑布</div></div></div>
+        <div onclick="openMap('AEON夢樂城宮崎')" class="spot"><span class="spot-icon">🛒</span><div class="spot-info"><div class="spot-name">AEON 夢樂城</div></div></div>
+        <div onclick="openMap('日南太陽花園')" class="spot"><span class="spot-icon">🗿</span><div class="spot-info"><div class="spot-name">日南太陽花園 (摩艾石像)</div></div></div>
+        <div onclick="openMap('鵜戶神宮')" class="spot"><span class="spot-icon">🐇</span><div class="spot-info"><div class="spot-name">鵜戶神宮</div></div></div>
+        <div onclick="openMap('宮崎觀光飯店')" class="hotel">🏨 住宿：宮崎觀光飯店</div>
+    </div>
+
+    <div class="day-card">
+        <div class="day-header">Day 4 <span>高千穗</span></div>
+        <div onclick="openMap('飫肥城跡')" class="spot"><span class="spot-icon">🏯</span><div class="spot-info"><div class="spot-name">飫肥城跡</div></div></div>
+        <div onclick="openMap('高千穗天照鐵道')" class="spot"><span class="spot-icon">🚂</span><div class="spot-info"><div class="spot-name">高千穗天照鐵道</div></div></div>
+        <div onclick="openMap('高千穗峽')" class="spot"><span class="spot-icon">🚣</span><div class="spot-info"><div class="spot-name">高千穗峽/真名井瀑布</div></div></div>
+        <div onclick="openMap('高千穗神社')" class="spot"><span class="spot-icon">🌲</span><div class="spot-info"><div class="spot-name">高千穗神社 (夫妻樹/鐵狛犬)</div></div></div>
+        <div onclick="openMap('ANA Crowne Plaza Kumamoto New Sky')" class="hotel">🏨 住宿：ANA Crowne Plaza Kumamoto</div>
+    </div>
+
+    <div class="day-card">
+        <div class="day-header">Day 5 <span>熊本/返程</span></div>
+        <div onclick="openMap('熊本城')" class="spot"><span class="spot-icon">🏯</span><div class="spot-info"><div class="spot-name">熊本城</div></div></div>
+        <div onclick="openMap('SAKURA MACHI Kumamoto')" class="spot"><span class="spot-icon">🛍️</span><div class="spot-info"><div class="spot-name">櫻町購物中心</div></div></div>
+        <div onclick="openMap('水前寺成趣園')" class="spot"><span class="spot-icon">🍵</span><div class="spot-info"><div class="spot-name">水前寺成趣園</div></div></div>
+        <div onclick="openMap('熊本機場')" class="spot"><span class="spot-icon">🛫</span><div class="spot-info"><div class="spot-name">熊本空港 -> 桃園</div></div></div>
+    </div>
+</div>
+
+<div id="expenses" class="section">
+    <div class="total-banner">
+        <div>總支出 (約合台幣)</div>
+        <h2 id="totalTWD">NT$ 0</h2>
+        <div style="font-size:0.8rem; opacity:0.8">總日幣: ¥<span id="totalJPY">0</span></div>
+    </div>
+
+    <div class="tool-card">
+        <h3>新增消費</h3>
+        <div class="input-group">
+            <input type="text" id="descInput" placeholder="項目 (如: 拉麵)">
+            <input type="number" id="amtInput" placeholder="日幣金額">
+        </div>
+        <button class="btn-add" onclick="addExpense()">+ 記一筆</button>
+    </div>
+
+    <div id="expenseList" class="expense-list">
+        </div>
+    <div style="text-align:center; margin-top:20px;">
+        <button onclick="clearExpenses()" style="color:red; background:none; border:none; text-decoration:underline;">清除所有紀錄</button>
+    </div>
+</div>
+
+<div id="tools" class="section">
+    <div class="tool-card">
+        <h3>🌤️ 及時天氣預報</h3>
+        <p style="font-size:0.9rem; color:#666;">點擊下方按鈕查看日本氣象廳最新預報：</p>
+        <a href="https://tenki.jp/forecast/9/46/8810/" target="_blank" class="weather-btn">鹿兒島 (Kagoshima)</a>
+        <a href="https://tenki.jp/forecast/9/45/8710/" target="_blank" class="weather-btn">宮崎 (Miyazaki)</a>
+        <a href="https://tenki.jp/forecast/9/43/8610/" target="_blank" class="weather-btn">熊本 (Kumamoto)</a>
+    </div>
+
+    <div class="tool-card">
+        <h3>💰 匯率換算 (JPY → TWD)</h3>
+        <div class="rate-calc">
+            <div style="display:flex; align-items:center; gap:5px;">
+                <label>目前匯率:</label>
+                <input type="number" id="rate" value="0.215" step="0.001" style="width:80px;" oninput="convertCurrency()">
+            </div>
+            <div class="input-group">
+                <input type="number" id="calcJpy" placeholder="輸入日幣" oninput="convertCurrency()">
+                <div style="display:flex; align-items:center; font-weight:bold;">= NT$ <span id="calcTwd" style="margin-left:5px; color:var(--secondary);">0</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<nav>
+    <button onclick="switchTab('itinerary', this)" class="active"><span>📅</span>行程</button>
+    <button onclick="switchTab('expenses', this)"><span>💸</span>記帳</button>
+    <button onclick="switchTab('tools', this)"><span>🧰</span>工具</button>
+</nav>
+
+<script>
+    // 1. Navigation Logic
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    // 2. Google Maps Logic
+    function openMap(locationName) {
+    const query = encodeURIComponent(locationName);
+    // 使用 Google Maps 官方搜尋 URL 結構
+    window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
+    }
+ 
+
+    // 3. Expense Tracker Logic
+    let expenses = JSON.parse(localStorage.getItem('tripExpenses')) || [];
+    let currentRate = 0.215; // Default rate
+
+    function renderExpenses() {
+        const list = document.getElementById('expenseList');
+        const totalTwdEl = document.getElementById('totalTWD');
+        const totalJpyEl = document.getElementById('totalJPY');
+        
+        list.innerHTML = '';
+        let totalJpy = 0;
+
+        expenses.slice().reverse().forEach((item, index) => {
+            totalJpy += parseFloat(item.amount);
+            const twdVal = Math.round(item.amount * currentRate);
+            
+            const div = document.createElement('div');
+            div.className = 'expense-item';
+            div.innerHTML = `
+                <div>
+                    <div style="font-weight:bold;">${item.desc}</div>
+                    <div class="badge">NT$ ${twdVal}</div>
+                </div>
+                <div style="display:flex; align-items:center;">
+                    <span style="font-weight:bold;">¥${item.amount}</span>
+                    <span class="delete-btn" onclick="deleteExpense(${expenses.length - 1 - index})">×</span>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+
+        totalJpyEl.innerText = totalJpy;
+        totalTwdEl.innerText = 'NT$ ' + Math.round(totalJpy * currentRate).toLocaleString();
+    }
+
+    function addExpense() {
+        const desc = document.getElementById('descInput').value;
+        const amt = document.getElementById('amtInput').value;
+        
+        if(desc && amt) {
+            expenses.push({ desc: desc, amount: parseFloat(amt) });
+            localStorage.setItem('tripExpenses', JSON.stringify(expenses));
+            document.getElementById('descInput').value = '';
+            document.getElementById('amtInput').value = '';
+            renderExpenses();
+        } else {
+            alert('請輸入項目和金額');
+        }
+    }
+
+    function deleteExpense(originalIndex) {
+        if(confirm('確定刪除這筆紀錄嗎？')) {
+            expenses.splice(originalIndex, 1);
+            localStorage.setItem('tripExpenses', JSON.stringify(expenses));
+            renderExpenses();
+        }
+    }
+
+    function clearExpenses() {
+        if(confirm('確定清空所有記帳資料？')) {
+            expenses = [];
+            localStorage.setItem('tripExpenses', JSON.stringify(expenses));
+            renderExpenses();
+        }
+    }
+
+    // 4. Converter Logic
+    function convertCurrency() {
+        const rate = parseFloat(document.getElementById('rate').value);
+        const jpy = parseFloat(document.getElementById('calcJpy').value);
+        currentRate = rate;
+        
+        if(!isNaN(jpy)) {
+            document.getElementById('calcTwd').innerText = Math.round(jpy * rate);
+        } else {
+            document.getElementById('calcTwd').innerText = '0';
+        }
+        renderExpenses(); // Re-calculate total with new rate
+    }
+
+    // Initialize
+    renderExpenses();
+</script>
+
+</body>
+</html>
